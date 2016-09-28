@@ -1,0 +1,3 @@
+[submodule "phina.js"]
+	path = phina.js
+	url = https://github.com/pentamania/phina.js.git
