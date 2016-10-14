@@ -3,6 +3,7 @@ phina.globalize();
 
 /**
  * 矩形型選択カーソル
+ *
  */
 phina.define('RectCursor', {
   superClass: 'phina.display.RectangleShape',
@@ -61,7 +62,7 @@ phina.define('HoppingLabel', {
 });
 
 /**
-*
+* player
 */
 phina.define('Player', {
   superClass: 'ProgrammableSprite',
@@ -264,99 +265,116 @@ phina.namespace(function() {
       var self = this;
       var v = this.domElement = document.createElement('video');
       v.setAttribute('preload', "none");
-      v.setAttribute('controls', true); //不要？
+      v.setAttribute('controls', false); //不要？
       v.oncanplay = function() {
         self.loaded = true;
         resolve(self);
       };
+      v.addEventListener('error', function(err){
+        alert('error: エラー、ブラウザリロードで治るかも');
+        console.log(err);
+      })
+      // v.onabort = function(e) {
+      //   alert('ロードに失敗しました、ブラウザリロードで治るかも\n'+e)
+      // }
+      // v.onsuspend = function(e) {
+      //   alert('ロードに失敗しました、ブラウザリロードで治るかも\n'+e)
+      // }
+      // v.onstalled = function(e) {
+      //   alert('ロードに失敗しました、ブラウザリロードで治るかも\n'+e)
+      // }
       v.src = this.src;
       v.load();
-
     },
 
   });
 
 });
 
-/**
- * [init description]
- * @class phina.display.VideoSprite
- * @param  {[String, HtmlElement]} video    [description]
- * @param  {[Object]} options) [description]
- * @return {[type]}          [description]
- */
-phina.define('phina.display.VideoSprite', {
-  superClass: 'phina.display.Sprite',
+phina.namespace(function() {
 
-  init: function(video, options) {
-    if (typeof video === 'string') {
-      var _video = phina.asset.AssetManager.get('video', video);
-      video = this.video = _video.domElement;
-    } else {
-      this.video = video; //TODO: アクセサにする？
-    }
+  /**
+   * @class phina.display.VideoSprite
+   * html5video要素のラッパークラス
+   *
+   * @param  {String, HtmlElement} video    [description]
+   * @param  {Object) [description]
+   * @return {void}          [description]
+   */
+  phina.define('phina.display.VideoSprite', {
+    superClass: 'phina.display.Sprite',
 
-    var options = {}.$safe(options, phina.display.VideoSprite.defaults);
-    video.loop = options.loop;
-    video.volume = options.volume; //iosでは音量のコントロールは不可
+    init: function(video, options) {
+      if (typeof video === 'string') {
+        var _video = phina.asset.AssetManager.get('video', video);
+        video = this.video = _video.domElement;
+      } else {
+        this.video = video; // アクセサにする？
+      }
 
-    var _image = phina.graphics.Canvas();
-    _image.setSize(video.videoWidth, video.videoHeight);
-    this.superInit(_image);
+      var options = {}.$safe(options, phina.display.VideoSprite.defaults);
+      video.loop = options.loop;
+      video.volume = options.volume; //iosでは音量のコントロールは不可
 
-    // image(内部canvas)とvideoの内容を常に同期する
-    // 音の同期はずれることも・・・
-    this.on('enterframe', function() {
-      this.image.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-    });
+      var _image = phina.graphics.Canvas();
+      _image.setSize(video.videoWidth, video.videoHeight);
+      this.superInit(_image);
 
-    video.onended = function(){
-      this.flare('ended');
-    }.bind(this)
-  },
+      // image(内部canvas)とvideoの内容を常に同期する
+      // 音の同期はずれることも・・・
+      this.on('enterframe', function() {
+        this.image.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+      });
 
-  play: function() {
-    // if (!this.video.played) this.video.play();
-    // console.log(!this.video.played);
-    this.video.play();
-    return this;
-  },
+      video.onended = function(){
+        this.flare('ended');
+      }.bind(this)
+    },
 
-  pause: function() {
-    this.video.pause();
-    return this;
-  },
+    play: function() {
+      // if (!this.video.played) this.video.play();
+      // console.log(!this.video.played);
+      this.video.play();
+      return this;
+    },
 
-  _accessor: {
-    currentTime: {
-      get: function()  { return this.video.currentTime; },
-      set: function(v) {
-        // console.log('change')
-        this.video.currentTime = v;
+    pause: function() {
+      this.video.pause();
+      return this;
+    },
+
+    _accessor: {
+      currentTime: {
+        get: function()  { return this.video.currentTime; },
+        set: function(v) {
+          // console.log('change')
+          this.video.currentTime = v;
+        },
+      },
+      paused: {
+        get: function()  { return this.video.paused; },
+      },
+      duration: {
+        get: function()  { return this.video.duration; },
+      },
+      volume: {
+        get: function()  { return this.video.volume; },
+        set: function(v)  { this.video.volume = v; },
+      },
+      muted: {
+        get: function()  { return this.video.muted; },
+        set: function(v)  { this.video.muted = v; },
       },
     },
-    paused: {
-      get: function()  { return this.video.paused; },
-    },
-    duration: {
-      get: function()  { return this.video.duration; },
-    },
-    volume: {
-      get: function()  { return this.video.volume; },
-      set: function(v)  { this.video.volume = v; },
-    },
-    muted: {
-      get: function()  { return this.video.muted; },
-      set: function(v)  { this.video.muted = v; },
-    },
-  },
 
-  _static: {
-    defaults: {
-      loop: false,
-      volume: 0.5,
+    _static: {
+      defaults: {
+        loop: false,
+        volume: 0.5,
+      },
     },
-  },
+  });
+
 });
 
 /**

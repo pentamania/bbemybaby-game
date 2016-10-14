@@ -1,26 +1,25 @@
 <?php
 /**
-* Use to format the Aviutl alias file (.exa) to json.
-* How to run : 'php [source.exa] [dist.json] [fps]'
+* Convert the Aviutl alias file (.exa) to tweener data(.json).
+* How to run : 'php [source.exa] [dist.json] [source fps]'
 
   @format：
   [
-  {framelength:number, duration:number, props:{x:number, y:number, scaleX:number, scaleY:number, rotation:number} },
-  {...}.
-  ...
+    {framelength:number, duration:number, props:{x:number, y:number, scaleX:number, scaleY:number, rotation:number} },
+    {...},
+    ...
   ]
 */
 
-// echo sys_get_temp_dir(); // tempfileの位置
 // setlocale(LC_ALL, 'ja_JP.UTF-8');
 const DEFAULT_FPS = 30;
 $MSPF = (1000/DEFAULT_FPS); // ms per frame: フレームごとの時間
 
-// ファイルパス： オプションで指定可能
-$file = './usamin.exa';
-$newFileName = "usamin-motion.json";
+// ファイルパス： オプションで指定
+$file = './dummy.exa';
+$convertedFileName = "dummy-motion.json";
 if (isset($argv[1])) $file = $argv[1];
-if (isset($argv[2])) $newFileName = $argv[2];
+if (isset($argv[2])) $convertedFileName = $argv[2];
 if (isset($argv[3])) $MSPF = 1000/$argv[3];
 
 $match_strings = [
@@ -31,7 +30,6 @@ $match_strings = [
   ["拡大率", "scale"],
   ["回転", "rotation"],
 ];
-// $match_words = ["length", "X", "Y", "回転", "拡大率"];
 $converted_data = array();
 $tween_data = [];
 $_props = [];
@@ -48,7 +46,7 @@ while (!feof($temp)) {
 // while (($data = fgetcsv($temp, 0, ",")) !== FALSE) {
   $line = fgets($temp);
 
-  // foreach($match_words as $word) {
+  // 行毎に必要な文字列があるか検索
   foreach($match_strings as $word) {
     if (strpos($line, $word[0]) !== false) {
       $pieces = explode(",", $line);
@@ -71,7 +69,7 @@ while (!feof($temp)) {
         $_props[$word[1]] = (float)$matches[0];
       }
 
-      // ”回転”で一区切り （"[vo]"でもいいかも）
+      // ”回転”で一区切り （"[vo]"でもいい？）
       if ($word[0] === "回転") {
         // echo $matches[0].'\n';
         $tween_data['props'] = $_props;
@@ -93,7 +91,7 @@ fclose($temp);
 $converted_data = json_encode($converted_data);
 
 // Save to new file
-$newfile = fopen($newFileName, "w");
+$newfile = fopen($convertedFileName, "w");
 if ($newfile) {
   fwrite($newfile, $converted_data);
   fclose($newfile);

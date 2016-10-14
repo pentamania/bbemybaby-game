@@ -2,6 +2,7 @@
 /**
  * @class LoadingScene
  *
+ * @param {object} [options] [description]
  */
 phina.define('MyLoadingScene', {
   superClass: 'phina.display.DisplayScene',
@@ -11,9 +12,9 @@ phina.define('MyLoadingScene', {
 
     var self = this;
     var video = phina.asset.Video();
-    video.load(VIDEO_SRC).then(function(asset) {
-      // alert('videolo');
-      phina.asset.AssetManager.set('video', 'bgVideo', asset);
+    video.load(VIDEO_SRC).then(function(v) {
+      // alert('videoload');
+      phina.asset.AssetManager.set('video', 'bgVideo', v);
       var loader = phina.asset.AssetLoader();
 
       loader.on('progress', function(e) {
@@ -23,13 +24,16 @@ phina.define('MyLoadingScene', {
         // console.log("loaded");
         self.exit();
       });
+      // loader.on('error', function(){
+      //   // alert('ロードに失敗しました、ブラウザリロードで治るかも')
+      // })
 
       loader.load(options.assets);
     });
 
     this.backgroundColor = BB_BLUE;
     var label = this.label = Label("なうろーでぃんぐ").addChildTo(this)
-    .setPosition(this.gridX.center(), this.gridY.center())
+      .setPosition(this.gridX.center(), this.gridY.center())
     ;
     label.alpha = 0;
     label.tweener
@@ -48,7 +52,9 @@ phina.define('MyLoadingScene', {
 
 /**
  * SplashScene
+ * 最初の制作会社表記的なやつ
  *
+ * @param {object} [options]
  */
 phina.define('SplashScene', {
   superClass: 'phina.display.DisplayScene',
@@ -93,7 +99,8 @@ phina.define('SplashScene', {
       //   label.tweener.play();
       // })
     ;
-    // PCならそのまま遷移：OP鳴らないのでとりあえずモバイルでも
+    // PCならそのまま遷移
+    // と思ったけどOP鳴らないのでとりあえずモバイルでも自動遷移
     // if (!phina.isMobile()) {
       this.sprite.tweener
         .to({alpha:0}, 500, 'easeOutCubic')
@@ -108,16 +115,16 @@ phina.define('SplashScene', {
     var event = 'pointend';
     this.addEventListener(event, function(){
       if (phina.isMobile()) {
-        // unlock moble sound limit （効かない...）
+        // モバイル音楽制限のアンロック （が、効かない...）
         var actx = new (window.AudioContext || window.webkitAudioContext)();
         var buffer = actx.createBuffer(1, 1, 22050);
         var source = actx.createBufferSource();
         source.buffer = buffer;
         source.connect(actx.destination);
         source.start(0);
+        this.exit();
       }
 
-      this.exit();
     });
 
     // var self = this;
@@ -145,8 +152,12 @@ phina.define('SplashScene', {
 
 });
 
+
 /**
- * カウントダウンシーン
+ * CountdownScene
+ * ゲーム開始前のカウントダウン画面、PCのみ
+ *
+ * @param {object} [options]
  */
 phina.define('CountdownScene', {
   superClass: 'phina.game.CountScene',
@@ -168,6 +179,7 @@ phina.define('CountdownScene', {
 
 /**
  * タイトル画面
+ *
  */
 phina.define('TitleScene', {
   superClass: 'DisplayScene',
@@ -182,10 +194,15 @@ phina.define('TitleScene', {
     this.superInit(options);
 
     this.backgroundColor = BB_BLUE;
-    // this.backgroundColor = 'hsla(200, 30%, 90%, 0.8)';
 
-    // this.titleLabel = Label({
-    // タイトル
+    //　セーブデータのロード（初回、プレイヤー選択されていないときのみ）
+    var saveData = window.localStorage.getItem("save_data");
+    if (!options.player && saveData) {
+      console.log('セーブデータロード')
+      options = ({}).$extend(options, JSON.parse(saveData));
+    }
+
+    // タイトルラベル
     Label({
       text: 'BBEMYBABY \n        the GAME',
       fontSize: 90,
@@ -225,7 +242,7 @@ phina.define('TitleScene', {
     .setPosition(self.gridX.center(), self.gridY.span(7))
     .addChildTo(this);
 
-    // 操作キャラクター
+    // 操作キャラ
     if (!options._playerIndex) options._playerIndex = 0;
     characters.forEach(function(characterName, i){
       var posXShift = (i%2===0) ? -100 : 100;
@@ -290,6 +307,7 @@ phina.define('TitleScene', {
 
 /**
 * リサルト画面
+*
 */
 phina.define('ResultScene', {
   superClass: 'DisplayScene',
@@ -332,7 +350,10 @@ phina.define('ResultScene', {
     } else {
       options.hiScores[options.player] = options.score;
     }
-    // console.log(options.hiScores)
+
+    //TODO: localstorageに記録
+    window.localStorage.setItem("save_data", JSON.stringify(options));
+    // window.localStorage.setItem =
 
     // タイトル戻るボタン
     var returnButton = Button({
@@ -351,7 +372,6 @@ phina.define('ResultScene', {
     var _onPush = function() {
       // 新規タブでシェアページ開く
       // Ref: http://qiita.com/yukiyukki/items/907d3173001c52df50c0
-      // var childWindow = window.open("", "child", "width=400, height=300");
       var childWindow = window.open('about:blank');
 
       // サウンド
@@ -367,7 +387,7 @@ phina.define('ResultScene', {
       };
 
       // URL生成
-      var sharedText = 'ｱﾌｩﾝ!!　キャラ：{player}　点：{score}'.format({
+      var sharedText = 'ｱｯﾌｩﾌﾝ!　キャラ：{player}　点：{score}'.format({
         player: playerNameHash[options.player],
         score: options.score,
       });
@@ -386,7 +406,7 @@ phina.define('ResultScene', {
 
     var tweetButton = Button({
       width: BUTTON_WIDTH,
-      text: 'twitterにｱﾌｩﾝ!',
+      text: 'twitterにｱｯﾌｩﾌﾝ!',
       cornerRadius: 5,
     })
     .setPosition(this.gridX.center(), this.gridY.span(13))
@@ -405,7 +425,8 @@ phina.define('ResultScene', {
 });
 
 /**
-* ポーズ画面
+* ポーズ画面 スマホでタップさせる用
+*
 */
 phina.define('MyPauseScene', {
   superClass: 'phina.display.DisplayScene',
@@ -425,5 +446,20 @@ phina.define('MyPauseScene', {
     }).addChildTo(this)
     .setPosition(this.gridX.center(), this.gridY.center())
     ;
+  },
+});
+
+/**
+* デバッグ用
+*/
+phina.define('DebugScene', {
+  superClass: 'phina.display.DisplayScene',
+
+  init: function(params) {
+    params = ({}).$safe(params, phina.game.PauseScene.defaults);
+    this.superInit(params);
+
+    this.backgroundColor = BB_BLUE;
+
   },
 });

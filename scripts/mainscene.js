@@ -1,11 +1,14 @@
+
 /**
- * メインシーン
+ * @class  MainScene
+ * メイン画面
  *
+ * @param {object} [options]
  */
 phina.define('MainScene', {
   superClass: 'DisplayScene',
 
-  isPlaying: false,
+  // isPlaying: false,
   score: 0,
   _judgeCount: 0,
   _judgeFrame: 0,
@@ -17,10 +20,12 @@ phina.define('MainScene', {
   rotBtn: null,
   rotBtnCCW: null,
 
+  /**
+   * constructor
+   */
   init: function(options) {
     var self = this;
     var _player, motionData, npcMotionData, firstProps, npcFirstProps;
-    // var taskCount = 0;
     this.superInit(options);
 
     // 背景色を指定
@@ -60,7 +65,12 @@ phina.define('MainScene', {
     this.player.setPosition(firstProps.x + bgv.x, firstProps.y + bgv.y);
 
     // 仮ラベル
-    if (DEBUG_MODE) this.label = Label('BEMYBABY').addChildTo(this).setPosition(this.gridX.center(), this.gridY.center())
+    if (DEBUG_MODE) {
+      this.label = Label('BEMYBABY')
+      .addChildTo(this)
+      .setPosition(this.gridX.center(), this.gridY.center())
+      ;
+    }
 
     // スコアとか
     this.scoreLabel = Label({
@@ -74,7 +84,6 @@ phina.define('MainScene', {
     .setPosition(this.gridX.span(16), this.gridY.span(2))
     ;
 
-    // 操作ボタン
     var btnSpan = SCREEN_WIDTH/9;
     this.rotBtnCCW = KeyCaptionButton("f0e2", 'Z', {
       fill: '#E83BEA',
@@ -83,6 +92,7 @@ phina.define('MainScene', {
     // .setPosition(this.gridX.span(2), this.gridY.span(14))
     .setPosition(btnSpan, this.gridY.span(14))
     .addChildTo(this)
+    // なんか押すたびにフレーム落ちしてガタガタするので保留
     // .on('pointstay', function(){
     //   self.player.rotate(true);
     // })
@@ -98,7 +108,7 @@ phina.define('MainScene', {
     this.on('enter', function(){
       var app = this.app;
       var playGame = function() {
-        this.isPlaying = true;
+        // this.isPlaying = true;
         this.player.play();
         this.model.play();
         this.npc.play();
@@ -136,14 +146,11 @@ phina.define('MainScene', {
 
     // ビデオ・モーションが終わったらリサルト画面へ
     this.bgVideo.on('ended', function() {
-      // alert('end')
       self.flare('complete');
     });
 
     this.one('complete', function(){
-      // taskCount++;
-      // if (taskCount == 2){
-        console.log(self._judgeCount);
+      // console.log(self._judgeCount);
         options.score = self.score;
         self.exit(options);
       // }
@@ -183,14 +190,14 @@ phina.define('MainScene', {
     }
 
     // interaction
-    ps.forEach(function(p){
+    ps.forEach(function(p, i){
       if (p.getPointing()) {
         // self.bgVideo.currentTime = 10;
 
         // ボタンを押している間は
         if (self.rotBtn.hitTest(p.x, p.y)) {
           player.rotate();
-          // console.log('hit');
+
         } else if (self.rotBtnCCW.hitTest(p.x, p.y)){
           player.rotate(true);
 
@@ -213,6 +220,7 @@ phina.define('MainScene', {
 
   },
 
+  // テスト用
   onclick: function(){
     // this.bgVideo.currentTime = 4;
     // this.bgVideo.play();
@@ -250,9 +258,9 @@ phina.define('MainScene', {
   },
 
   judgeRotationGap: function() {
-    var delta = Math.abs(this.model.rotation - this.player.rotation)*0.01;
-    var score = (1-delta < 0)? 0 : MAX_SCORE * (1-delta);
-    this.addScore(Math.floor(score),'rotation');
+    var gap = Math.abs(this.model.rotation - this.player.rotation)*0.01;
+    var score = (1-gap < 0)? 0 : MAX_SCORE * (1-gap);
+    this.addScore(Math.floor(score), 'rotation');
     // console.log("rotation", score)
   },
 
@@ -261,7 +269,6 @@ phina.define('MainScene', {
     var ratio = distance/DISTANCE_BORDER;
     var score = (ratio > 1) ? 0 : MAX_SCORE * (1-ratio);
     this.addScore(Math.floor(score), 'position');
-    // console.dir(this.model.position)
     // console.log(distance);
   },
 
