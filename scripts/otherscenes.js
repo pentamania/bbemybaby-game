@@ -11,26 +11,19 @@ phina.define('MyLoadingScene', {
     this.superInit(options);
 
     var self = this;
-    var video = phina.asset.Video();
-    video.load(VIDEO_SRC).then(function(v) {
-      // alert('videoload');
-      phina.asset.AssetManager.set('video', 'bgVideo', v);
-      var loader = phina.asset.AssetLoader();
 
-      loader.on('progress', function(e) {
-        // console.log(e);
-      });
-      loader.on('load', function(){
-        // console.log("loaded");
-        self.exit();
-      });
-      // loader.on('error', function(){
-      //   // alert('ロードに失敗しました、ブラウザリロードで治るかも')
-      // })
-
-      loader.load(options.assets);
+    // ロード
+    var loader = phina.asset.AssetLoader();
+    loader.on('progress', function(e) {
+      console.log(e);
     });
+    loader.on('load', function(){
+      console.log("loaded");
+      self.exit();
+    });
+    loader.load(options.assets);
 
+    // アニメーション
     this.backgroundColor = BB_BLUE;
     var label = this.label = Label("なうろーでぃんぐ").addChildTo(this)
       .setPosition(this.gridX.center(), this.gridY.center())
@@ -78,7 +71,6 @@ phina.define('SplashScene', {
     .setSize(this.width, this.height);
     this.sprite.alpha = 0;
 
-    // ""
     var label = Label("タップしてスタート").addChildTo(this)
     .setPosition(this.gridX.center(), this.gridY.span(14))
     ;
@@ -99,8 +91,9 @@ phina.define('SplashScene', {
       //   label.tweener.play();
       // })
     ;
-    // PCならそのまま遷移
-    // と思ったけどOP鳴らないのでとりあえずモバイルでも自動遷移
+
+    // PCならそのまま遷移、モバイルはサウンド再生制限アンロックのためタップ操作を挟む
+    // と思ったけど、結局うまくいかないのでとりあえずモバイルでも自動遷移
     // if (!phina.isMobile()) {
       this.sprite.tweener
         .to({alpha:0}, 500, 'easeOutCubic')
@@ -114,7 +107,7 @@ phina.define('SplashScene', {
     // var event = (phina.isMobile()) ? 'touchend' : 'click';
     var event = 'pointend';
     this.addEventListener(event, function(){
-      if (phina.isMobile()) {
+      // if (phina.isMobile()) {
         // モバイル音楽制限のアンロック （が、効かない...）
         var actx = new (window.AudioContext || window.webkitAudioContext)();
         var buffer = actx.createBuffer(1, 1, 22050);
@@ -123,7 +116,7 @@ phina.define('SplashScene', {
         source.connect(actx.destination);
         source.start(0);
         this.exit();
-      }
+      // }
 
     });
 
@@ -351,9 +344,8 @@ phina.define('ResultScene', {
       options.hiScores[options.player] = options.score;
     }
 
-    //TODO: localstorageに記録
+    // localstorageに記録
     window.localStorage.setItem("save_data", JSON.stringify(options));
-    // window.localStorage.setItem =
 
     // タイトル戻るボタン
     var returnButton = Button({

@@ -22,6 +22,7 @@ var MAX_JUDGE_COUNT = 40;
 //   'baby',
 // ];
 
+// アセット
 var ASSET_PATH = "./assets/";
 var ASSETS = {
   image: {
@@ -42,9 +43,12 @@ var ASSETS = {
   },
   font: {
     FontAwesome: ASSET_PATH+'fonts/fontawesome-webfont.woff'
+  },
+  video: {
+    bgVideo: ASSET_PATH+"videos/bemybaby-original.mp4"
   }
 };
-var VIDEO_SRC = ASSET_PATH+"videos/bemybaby-original.mp4";
+// var VIDEO_SRC = ASSET_PATH+"videos/bemybaby-original.mp4";
 var SPLASH_IMAGE_SRC = ASSET_PATH+'images/splash-image.png';
 
 WebFont.load({
